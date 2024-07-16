@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Testing various combinations of SVG optimization tools
+
+EXAMPLE="example.svg"
+
+SCOUR_OPTS="--create-groups --no-renderer-workaround --strip-xml-prolog \
+--remove-descriptive-elements --enable-comment-stripping --strip-xml-space \
+--enable-id-stripping --shorten-ids"
+SVGC_OPTS="--multipass"
+SVGO_OPTS="--multipass"
+
+SO="svgo $SVGO_OPTS"
+SC="svgcleaner $SVGC_OPTS"
+SR="scour $SCOUR_OPTS"
+
+rm -r svg bmp
+
+mkdir svg
+cp "$EXAMPLE" svg/input.svg
+
+cd svg
+
+$SC input.svg svgc.svg
+$SO svgc.svg -o svgc-svgo.svg
+$SR svgc-svgo.svg >svgc-svgo-scour.svg
+$SR svgc.svg >svgc-scour.svg
+$SO svgc-scour.svg -o svgc-scour-svgo.svg
+
+$SO input.svg -o svgo.svg
+$SC svgo.svg svgo-svgc.svg
+$SR svgo-svgc.svg >svgo-svgc-scour.svg
+$SR svgo.svg >svgo-scour.svg
+$SC svgo-scour.svg svgo-scour-svgc.svg
+
+$SR input.svg >scour.svg
+$SC scour.svg scour-svgc.svg
+$SO scour-svgc.svg -o scour-svgc-svgo.svg
+$SO scour.svg -o scour-svgo.svg
+$SC scour-svgo.svg scour-svgo-svgc.svg
+
+mkdir ../bmp
+for x in *.svg; do
+	convert $x ../bmp/${x/.svg/.bmp}
+done
+cd ..
+
+md5sum bmp/*
+ls -lS svg/

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+TDIR="$(mktemp -d)"
+
+if [ -z "$2" ]; then
+	echo Usage:
+	echo \0 [input] [output]
+	exit 1
+fi
+
+SCOUR_OPTS="--create-groups --no-renderer-workaround --strip-xml-prolog \
+--remove-descriptive-elements --enable-comment-stripping --strip-xml-space \
+--enable-id-stripping --shorten-ids"
+SVGC_OPTS="--multipass"
+SVGO_OPTS="--multipass"
+
+svgcleaner $SVGC_OPTS "$1" "$TDIR/t1.svg"
+scour "$TDIR/t1.svg" >"$TDIR/t2.svg"
+svgo "$TDIR/t2.svg" -o "$2"
+
+rm -r "$TDIR"
